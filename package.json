@@ -3,16 +3,11 @@
   "main": "./lib/python-lama-lint",
   "version": "0.0.1",
   "description": "A nice python linter.",
-  "keywords": [
-  ],
-  "activationCommands": {
-    "atom-workspace": "python-lama-lint:toggle"
-  },
+  "keywords": [],
   "repository": "https://github.com/t3hmun/python-lama-lint",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }

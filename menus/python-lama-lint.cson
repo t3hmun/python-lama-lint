@@ -2,23 +2,19 @@
 'context-menu':
   'atom-text-editor': [
     {
-      'label': 'Toggle python-lama-lint'
-      'command': 'python-lama-lint:toggle'
+      'label': 'Check python-lama-lint is alive.'
+      'command': 'python-lama-lint:alive'
     }
   ]
 'menu': [
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'python-lama-lint'
+      'label': 'python-lama-alive'
       'submenu': [
         {
-          'label': 'Toggle'
-          'command': 'python-lama-lint:toggle'
-        },
-        {
-          'label': 'roggle'
-          'command': 'python-lama-lint:toggle'
+          'label': 'Am I alive?'
+          'command': 'python-lama-lint:alive'
         }
       ]
     ]

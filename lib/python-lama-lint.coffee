@@ -1,33 +1,12 @@
-PythonLamaLintView = require './python-lama-lint-view'
 {CompositeDisposable} = require 'atom'
-
 module.exports = PythonLamaLint =
-  pythonLamaLintView: null
-  modalPanel: null
-  subscriptions: null
 
   activate: (state) ->
-    @pythonLamaLintView = new PythonLamaLintView(state.pythonLamaLintViewState)
-    @modalPanel = atom.workspace.addModalPanel(item: @pythonLamaLintView.getElement(), visible: false)
-
-    # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
+    # Output to the console, handy to know that the plugin is activating.
+    console.log 'activated'
+    # CompositeDisposable is atom's event subscription API.
     @subscriptions = new CompositeDisposable
+    @subscriptions.add atom.commands.add 'atom-workspace', 'python-lama-lint:alive': => @alive()
 
-    # Register command that toggles this view
-    @subscriptions.add atom.commands.add 'atom-workspace', 'python-lama-lint:toggle': => @toggle()
-
-  deactivate: ->
-    @modalPanel.destroy()
-    @subscriptions.dispose()
-    @pythonLamaLintView.destroy()
-
-  serialize: ->
-    pythonLamaLintViewState: @pythonLamaLintView.serialize()
-
-  toggle: ->
-    console.log 'PythonLamaLint was toggled!'
-
-    if @modalPanel.isVisible()
-      @modalPanel.hide()
-    else
-      @modalPanel.show()
+  alive: ->
+    console.log 'is alive'

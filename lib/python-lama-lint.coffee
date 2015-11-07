@@ -8,5 +8,8 @@ module.exports = PythonLamaLint =
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.commands.add 'atom-workspace', 'python-lama-lint:alive': => @alive()
 
+  deactivate: ->
+    @subscriptions.dispose()
+
   alive: ->
     console.log 'is alive'

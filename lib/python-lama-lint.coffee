@@ -7,3 +7,18 @@ module.exports = PythonLamaLint =
 
   deactivate: ->
     @aliveCommand.dispose()
+
+  provideLinter: ->
+    provider =
+      name: 'pll',
+      grammarScopes: ['source.python'],
+      scope: 'file',
+      lintOnFly: false,
+      lint: (textEditor) =>
+        console.log('Linting.' + textEditor.getPath())
+        return  [{
+            type: 'Error',
+            text: 'Good morning.',
+            range:[[0,0], [0,1]],
+            filePath: textEditor.getPath()
+          }]

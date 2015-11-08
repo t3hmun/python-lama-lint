@@ -14,11 +14,13 @@ module.exports = PythonLamaLint =
       grammarScopes: ['source.python'],
       scope: 'file',
       lintOnFly: false,
-      lint: (textEditor) =>
+      lint: (textEditor) ->
         console.log('Linting.' + textEditor.getPath())
-        return  [{
+        new Promise ((resolve, reject) ->
+          resolve([{
             type: 'Error',
             text: 'Good morning.',
             range:[[0,0], [0,1]],
             filePath: textEditor.getPath()
-          }]
+          }])
+        )

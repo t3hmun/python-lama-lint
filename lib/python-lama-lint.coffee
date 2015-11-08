@@ -1,3 +1,5 @@
+{BufferedProcess} = require 'atom'
+path = require 'path'
 module.exports = PythonLamaLint =
 
   activate: (state) ->
@@ -17,10 +19,27 @@ module.exports = PythonLamaLint =
       lint: (textEditor) ->
         console.log('Linting.' + textEditor.getPath())
         new Promise ((resolve, reject) ->
-          resolve([{
-            type: 'Error',
-            text: 'Good morning.',
-            range:[[0,0], [0,1]],
-            filePath: textEditor.getPath()
-          }])
+          filepath = textEditor.getPath()
+          ret = []
+          filedir = path.dirname textEditor.getPath()
+          lamapath = 'pylama'
+          proc = new BufferedProcess(
+            command: lamapath
+            args: [filepath]
+            options: {
+              cwd: filedir
+            }
+            stdout: (data) ->
+              ret.push(data)
+            exit: (code) ->
+              lintdata = ret.join('')
+              # Spam to log for now, we'll write processing code after
+              console.log(lintdata + 'With code: ' + code)
+              resolve([{
+                type: 'Error',
+                text: 'Good afternoon.',
+                range:[[0,0], [0,1]],
+                filePath: textEditor.getPath()
+              }])
+          )
         )

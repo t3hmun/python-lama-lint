@@ -35,11 +35,36 @@ module.exports = PythonLamaLint =
               lintdata = ret.join('')
               # Spam to log for now, we'll write processing code after
               console.log(lintdata + 'With code: ' + code)
-              resolve([{
-                type: 'Error',
-                text: 'Good afternoon.',
-                range:[[0,0], [0,1]],
-                filePath: textEditor.getPath()
-              }])
+              lintlines = lintdata.split('\n')
+              res = []
+
+              processline = (line)->
+                codeindex = line.indexOf(': ')
+                if codeindex == -1
+                  # This line does not make sense so skip it.
+                  console.log('bad line:' + line)
+                  return
+                codeletter = line.charAt(codeindex + 2)
+                if codeletter == 'E'
+                  msgcode = 'Error'
+                else if codeletter == 'W'
+                  msgcode = 'Warning'
+                else
+                  msgcode = "Trace" # Gah we need a third type.
+                firstcolon = line.indexOf(':')
+                secondcolon = line.indexOf(':', firstcolon + 1)
+                lineno = parseInt(line.substring(firstcolon + 1, secondcolon), 10) - 1
+                msgrange = [[lineno, 0],[lineno, 1]]
+                msgtext = line.substring(codeindex + 2)
+                res.push {
+                  type: msgcode,
+                  text: msgtext,
+                  range:msgrange,
+                  filePath: filepath
+                }
+
+              processline line for line in lintlines
+
+              resolve(res)
           )
         )

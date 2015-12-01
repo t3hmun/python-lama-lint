@@ -13,6 +13,7 @@ activate = (state) ->
 deactivate = ->
   console.log 'deactivated: ' + moduleName
 
+# Converts line of LamaLint output into Linter package message.
 processline = (line, filepath)->
   codeindex = line.indexOf(': ')
   if codeindex == -1
@@ -38,6 +39,7 @@ processline = (line, filepath)->
     filePath: filepath
   }
 
+# Creates a promise to lint file.
 lintFile = (filePath) ->
   lintExecutor = (resolve, reject) ->
     ret = []

@@ -32,12 +32,11 @@ processline = (line, filepath)->
   lineno = parseInt(line.substring(firstcolon + 1, secondcolon), 10) - 1
   msgrange = [[lineno, 0],[lineno, 1]]
   msgtext = line.substring(codeindex + 2)
-  return lintEntry = {
+  return lintEntry =
     type: msgcode,
     text: msgtext,
     range:msgrange,
     filePath: filepath
-  }
 
 # Creates a promise to lint file.
 lintFile = (filePath) ->
@@ -48,9 +47,8 @@ lintFile = (filePath) ->
     proc = new BufferedProcess(
       command: lamapath
       args: [filePath]
-      options: {
+      options:
         cwd: filedir
-      }
       stdout: (data) ->
         ret.push(data)
       exit: (code) ->

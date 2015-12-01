@@ -24,41 +24,6 @@ deactivate = ->
   aliveCommand.dispose()
   console.log moduleName + ': disposed aliveCommand.'
 
-provideLinter = ->
-  provider =
-    # Short name saves screen space.
-    name: 'P',
-    grammarScopes: ['source.python'],
-    scope: 'file',
-    lintOnFly: false,
-    lint: (textEditor) ->
-      console.log('Linting.' + textEditor.getPath())
-      new Promise ((resolve, reject) ->
-        filepath = textEditor.getPath()
-        ret = []
-        filedir = path.dirname textEditor.getPath()
-        lamapath = 'pylama'
-        proc = new BufferedProcess(
-          command: lamapath
-          args: [filepath]
-          options: {
-            cwd: filedir
-          }
-          stdout: (data) ->
-            ret.push(data)
-          exit: (code) ->
-            lintdata = ret.join('')
-            # Spam to log for now, we'll write processing code after
-            console.log(lintdata + 'With code: ' + code)
-            lintlines = lintdata.split('\n')
-            results = []
-
-            processline line, results, filepath for line in lintlines
-
-            resolve(results)
-        )
-      )
-
 processline = (line, results, filepath)->
   codeindex = line.indexOf(': ')
   if codeindex == -1
@@ -84,6 +49,40 @@ processline = (line, results, filepath)->
     filePath: filepath
   }
 
+lintFile = (filePath) ->
+  lintExecutor = (resolve, reject) ->
+    ret = []
+    filedir = path.dirname filePath
+    lamapath = 'pylama'
+    proc = new BufferedProcess(
+      command: lamapath
+      args: [filePath]
+      options: {
+        cwd: filedir
+      }
+      stdout: (data) ->
+        ret.push(data)
+      exit: (code) ->
+        lintdata = ret.join('')
+        lintlines = lintdata.split('\n')
+        results = []
+        processline line, results, filePath for line in lintlines
+        resolve(results)
+    )
+  return new Promise (lintExecutor)
+
+# Lint API function.
+provideLinter = ->
+  provider =
+    # Short name saves screen space.
+    name: 'P',
+    grammarScopes: ['source.python'],
+    scope: 'file',
+    lintOnFly: false,
+    lint: (textEditor) ->
+      filePath = textEditor.getPath()
+      console.log('Linting:' + filePath)
+      lintFile filePath
 
 # CoffeSctipt lacks function declarations so we can't enjoy function hoisting.
 module.exports.activate = activate

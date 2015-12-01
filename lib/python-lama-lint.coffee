@@ -26,7 +26,7 @@ processline = (line, filepath)->
   else if codeletter == 'W'
     msgcode = 'Warning'
   else
-    msgcode = "Warning" # Gah we need a third type.
+    msgcode = "Info"
   firstcolon = line.indexOf(':')
   secondcolon = line.indexOf(':', firstcolon + 1)
   lineno = parseInt(line.substring(firstcolon + 1, secondcolon), 10) - 1

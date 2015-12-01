@@ -5,13 +5,14 @@ path = require 'path'
 moduleName = 'python-lama-lint'
 
 # Package API function.
+# Called when the package is being loaded, used to setup anything.
 activate = (state) ->
-  # Output to the console, handy to know that the plugin is activating.
-  console.log 'activated: ' + moduleName
+  console.log 'activated: ' + moduleName # For debug.
 
 # Package API function.
+# Called when the package is deactivated, use for disposing.
 deactivate = ->
-  console.log 'deactivated: ' + moduleName
+  console.log 'deactivated: ' + moduleName # For debug.
 
 # Converts line of LamaLint output into Linter package message.
 processline = (line, filepath)->
@@ -62,7 +63,8 @@ lintFile = (filePath) ->
     )
   return new Promise (lintExecutor)
 
-# Lint API function.
+# Linter API function.
+# Provides a the config and a function for performing the linting.
 provideLinter = ->
   provider =
     # Short name saves screen space.
@@ -72,10 +74,13 @@ provideLinter = ->
     lintOnFly: false,
     lint: (textEditor) ->
       filePath = textEditor.getPath()
-      console.log('Linting:' + filePath)
+      console.log('Linting:' + filePath) # For debug.
       lintFile filePath
 
-# CoffeSctipt lacks function declarations so we can't enjoy function hoisting.
+# Rant:
+# CoffeeScript lacks function declarations so we can't enjoy function hoisting.
+
+# Export essential functions.
 module.exports.activate = activate
 module.exports.deactivate = deactivate
 module.exports.provideLinter = provideLinter

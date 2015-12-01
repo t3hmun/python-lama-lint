@@ -1,28 +1,17 @@
 {BufferedProcess} = require 'atom'
 path = require 'path'
 
-# People seem to be using `module.exports` (`this`) as a place to put module
-#  scope variables.
-# That is horrific, exports is for things that you want to explicitly expose.
-# Other people seem to be wrapping all thier code in an object so they can use
-#  the object via `this` for thier wider scoped vars.
-# I suppose using `this` (@) clearly indicates a wider scope is in use.
-# However it lacks any consistency. Strict mode JS makes more sense.
-
-# Module level vars make sense, this is node-based not browser-based.
-aliveCommand = null
-
 # Name for debug.
 moduleName = 'python-lama-lint'
 
+# Package API function.
 activate = (state) ->
   # Output to the console, handy to know that the plugin is activating.
   console.log 'activated: ' + moduleName
-  aliveCommand = atom.commands.add 'atom-workspace', 'python-lama-lint:alive': -> console.log('alive')
 
+# Package API function.
 deactivate = ->
-  aliveCommand.dispose()
-  console.log moduleName + ': disposed aliveCommand.'
+  console.log 'deactivated: ' + moduleName
 
 processline = (line, results, filepath)->
   codeindex = line.indexOf(': ')
@@ -36,7 +25,7 @@ processline = (line, results, filepath)->
   else if codeletter == 'W'
     msgcode = 'Warning'
   else
-    msgcode = "Trace" # Gah we need a third type.
+    msgcode = "Warning" # Gah we need a third type.
   firstcolon = line.indexOf(':')
   secondcolon = line.indexOf(':', firstcolon + 1)
   lineno = parseInt(line.substring(firstcolon + 1, secondcolon), 10) - 1

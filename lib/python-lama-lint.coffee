@@ -13,12 +13,12 @@ activate = (state) ->
 deactivate = ->
   console.log 'deactivated: ' + moduleName
 
-processline = (line, results, filepath)->
+processline = (line, filepath)->
   codeindex = line.indexOf(': ')
   if codeindex == -1
     # This line does not make sense so skip it.
     console.log('bad line:' + line)
-    return
+    return undefined
   codeletter = line.charAt(codeindex + 2)
   if codeletter == 'E'
     msgcode = 'Error'
@@ -31,7 +31,7 @@ processline = (line, results, filepath)->
   lineno = parseInt(line.substring(firstcolon + 1, secondcolon), 10) - 1
   msgrange = [[lineno, 0],[lineno, 1]]
   msgtext = line.substring(codeindex + 2)
-  results.push {
+  return lintEntry = {
     type: msgcode,
     text: msgtext,
     range:msgrange,
@@ -55,7 +55,9 @@ lintFile = (filePath) ->
         lintdata = ret.join('')
         lintlines = lintdata.split('\n')
         results = []
-        processline line, results, filePath for line in lintlines
+        for line in lintlines
+          res = processline line, filePath
+          if typeof res isnt 'undefined' then results.push res
         resolve(results)
     )
   return new Promise (lintExecutor)

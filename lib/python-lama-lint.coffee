@@ -18,7 +18,7 @@ processline = (line, filepath)->
   codeindex = line.indexOf(': ')
   if codeindex == -1
     # This line does not make sense so skip it.
-    console.log('bad line:' + line)
+    if line isnt '' then console.log('bad line:' + line)
     return undefined
   codeletter = line.charAt(codeindex + 2)
   if codeletter == 'E'

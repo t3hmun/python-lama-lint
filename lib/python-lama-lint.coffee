@@ -1,70 +1,91 @@
 {BufferedProcess} = require 'atom'
 path = require 'path'
-module.exports = PythonLamaLint =
 
-  activate: (state) ->
-    # Output to the console, handy to know that the plugin is activating.
-    console.log 'activated'
-    @aliveCommand = atom.commands.add 'atom-workspace', 'python-lama-lint:alive': -> console.log('alive')
+# People seem to be using `module.exports` (`this`) as a place to put module
+#  scope variables.
+# That is horrific, exports is for things that you want to explicitly expose.
+# Other people seem to be wrapping all thier code in an object so they can use
+#  the object via `this` for thier wider scoped vars.
+# I suppose using `this` (@) clearly indicates a wider scope is in use.
+# However it lacks any consistency. Strict mode JS makes more sense.
 
-  deactivate: ->
-    @aliveCommand.dispose()
+# Module level vars make sense, this is node-based not browser-based.
+aliveCommand = null
 
-  provideLinter: ->
-    provider =
-      name: 'pll',
-      grammarScopes: ['source.python'],
-      scope: 'file',
-      lintOnFly: false,
-      lint: (textEditor) ->
-        console.log('Linting.' + textEditor.getPath())
-        new Promise ((resolve, reject) ->
-          filepath = textEditor.getPath()
-          ret = []
-          filedir = path.dirname textEditor.getPath()
-          lamapath = 'pylama'
-          proc = new BufferedProcess(
-            command: lamapath
-            args: [filepath]
-            options: {
-              cwd: filedir
-            }
-            stdout: (data) ->
-              ret.push(data)
-            exit: (code) ->
-              lintdata = ret.join('')
-              # Spam to log for now, we'll write processing code after
-              console.log(lintdata + 'With code: ' + code)
-              lintlines = lintdata.split('\n')
-              res = []
+# Name for debug.
+moduleName = 'python-lama-lint'
 
-              processline = (line)->
-                codeindex = line.indexOf(': ')
-                if codeindex == -1
-                  # This line does not make sense so skip it.
-                  console.log('bad line:' + line)
-                  return
-                codeletter = line.charAt(codeindex + 2)
-                if codeletter == 'E'
-                  msgcode = 'Error'
-                else if codeletter == 'W'
-                  msgcode = 'Warning'
-                else
-                  msgcode = "Trace" # Gah we need a third type.
-                firstcolon = line.indexOf(':')
-                secondcolon = line.indexOf(':', firstcolon + 1)
-                lineno = parseInt(line.substring(firstcolon + 1, secondcolon), 10) - 1
-                msgrange = [[lineno, 0],[lineno, 1]]
-                msgtext = line.substring(codeindex + 2)
-                res.push {
-                  type: msgcode,
-                  text: msgtext,
-                  range:msgrange,
-                  filePath: filepath
-                }
+activate = (state) ->
+  # Output to the console, handy to know that the plugin is activating.
+  console.log 'activated: ' + moduleName
+  aliveCommand = atom.commands.add 'atom-workspace', 'python-lama-lint:alive': -> console.log('alive')
 
-              processline line for line in lintlines
+deactivate = ->
+  aliveCommand.dispose()
+  console.log moduleName + ': disposed aliveCommand.'
 
-              resolve(res)
-          )
+provideLinter = ->
+  provider =
+    # Short name saves screen space.
+    name: 'P',
+    grammarScopes: ['source.python'],
+    scope: 'file',
+    lintOnFly: false,
+    lint: (textEditor) ->
+      console.log('Linting.' + textEditor.getPath())
+      new Promise ((resolve, reject) ->
+        filepath = textEditor.getPath()
+        ret = []
+        filedir = path.dirname textEditor.getPath()
+        lamapath = 'pylama'
+        proc = new BufferedProcess(
+          command: lamapath
+          args: [filepath]
+          options: {
+            cwd: filedir
+          }
+          stdout: (data) ->
+            ret.push(data)
+          exit: (code) ->
+            lintdata = ret.join('')
+            # Spam to log for now, we'll write processing code after
+            console.log(lintdata + 'With code: ' + code)
+            lintlines = lintdata.split('\n')
+            results = []
+
+            processline line, results, filepath for line in lintlines
+
+            resolve(results)
         )
+      )
+
+processline = (line, results, filepath)->
+  codeindex = line.indexOf(': ')
+  if codeindex == -1
+    # This line does not make sense so skip it.
+    console.log('bad line:' + line)
+    return
+  codeletter = line.charAt(codeindex + 2)
+  if codeletter == 'E'
+    msgcode = 'Error'
+  else if codeletter == 'W'
+    msgcode = 'Warning'
+  else
+    msgcode = "Trace" # Gah we need a third type.
+  firstcolon = line.indexOf(':')
+  secondcolon = line.indexOf(':', firstcolon + 1)
+  lineno = parseInt(line.substring(firstcolon + 1, secondcolon), 10) - 1
+  msgrange = [[lineno, 0],[lineno, 1]]
+  msgtext = line.substring(codeindex + 2)
+  results.push {
+    type: msgcode,
+    text: msgtext,
+    range:msgrange,
+    filePath: filepath
+  }
+
+
+# CoffeSctipt lacks function declarations so we can't enjoy function hoisting.
+module.exports.activate = activate
+module.exports.deactivate = deactivate
+module.exports.provideLinter = provideLinter

@@ -3,8 +3,7 @@ path = require 'path'
 
 # Name for debug.
 moduleName = 'python-lama-lint'
-status = null
-statusEle = null
+status = {}
 
 # Package API function.
 # Called when the package is being loaded, used to setup anything.
@@ -14,9 +13,20 @@ activate = (state) ->
 # Package API function.
 # Called when the package is deactivated, use for disposing.
 deactivate = ->
-  status?.destroy()
-  status = null
+  status.bar?.destroy()
+  status.bar = null
   console.log 'deactivated: ' + moduleName # For debug.
+
+# Updates the status bar element
+updateStatus = (errors, warnings, infos) ->
+  status.errors.textContent = 'E: ' + errors
+  status.warnings.textContent = ' W: ' + warnings
+  status.infos.textContent = ' I: ' + infos
+  # Text and the numbers above 0 are both give colour.
+  # These are basic atom styles from the styleguide.
+  status.errors.className = if errors then 'text-error' else 'text-subtle'
+  status.warnings.className = if warnings then 'text-warning' else 'text-subtle'
+  status.infos.className = if infos then 'text-info' else 'text-subtle'
 
 # Converts line of LamaLint output into Linter package message.
 processline = (line, filepath)->
@@ -62,9 +72,18 @@ lintFile = (filePath) ->
         lintdata = ret.join('')
         lintlines = lintdata.split('\n')
         results = []
+        infos = 0
+        warnings = 0
+        errors = 0
         for line in lintlines
           res = processline line, filePath
-          if typeof res isnt 'undefined' then results.push res
+          if typeof res isnt 'undefined'
+            results.push res
+            switch res.type
+              when 'Error' then errors++
+              when 'Warning' then warnings++
+              when 'Info' then infos++
+        updateStatus(errors, warnings, infos)
         resolve(results)
     )
   return new Promise (lintExecutor)
@@ -85,9 +104,15 @@ provideLinter = ->
 
 # Status bar API function
 consumeStatusBar = (statusBar) ->
-  statusEle = document.createElement('span')
-  statusEle.textContent = 'E:? W:? I:?'
-  status = statusBar.addLeftTile(item: statusEle, priority: 100)
+  status.ele = document.createElement('span')
+  status.errors = document.createElement('span')
+  status.warnings = document.createElement('span')
+  status.infos = document.createElement('span')
+  status.ele.appendChild status.errors
+  status.ele.appendChild status.warnings
+  status.ele.appendChild status.infos
+  updateStatus '?', '?', '?'
+  status.bar = statusBar.addLeftTile(item: status.ele, priority: 100)
 
 # Rant:
 # CoffeeScript lacks function declarations so we can't enjoy function hoisting.

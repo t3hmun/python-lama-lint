@@ -41,6 +41,8 @@ processline = (line, filepath)->
 
 # Creates a promise to lint file.
 lintFile = (filePath) ->
+  # The executor function returns quickly, the resolve method is captured in
+  #  in the ansyc buffered process exit function.
   lintExecutor = (resolve, reject) ->
     ret = []
     filedir = path.dirname filePath

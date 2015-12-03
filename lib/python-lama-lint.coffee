@@ -3,6 +3,8 @@ path = require 'path'
 
 # Name for debug.
 moduleName = 'python-lama-lint'
+status = null
+statusEle = null
 
 # Package API function.
 # Called when the package is being loaded, used to setup anything.
@@ -12,6 +14,8 @@ activate = (state) ->
 # Package API function.
 # Called when the package is deactivated, use for disposing.
 deactivate = ->
+  status?.destroy()
+  status = null
   console.log 'deactivated: ' + moduleName # For debug.
 
 # Converts line of LamaLint output into Linter package message.
@@ -79,6 +83,12 @@ provideLinter = ->
       console.log('Linting:' + filePath) # For debug.
       lintFile filePath
 
+# Status bar API function
+consumeStatusBar = (statusBar) ->
+  statusEle = document.createElement('span')
+  statusEle.textContent = 'E:? W:? I:?'
+  status = statusBar.addLeftTile(item: statusEle, priority: 100)
+
 # Rant:
 # CoffeeScript lacks function declarations so we can't enjoy function hoisting.
 
@@ -86,3 +96,4 @@ provideLinter = ->
 module.exports.activate = activate
 module.exports.deactivate = deactivate
 module.exports.provideLinter = provideLinter
+module.exports.consumeStatusBar = consumeStatusBar

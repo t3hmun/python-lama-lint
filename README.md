@@ -2,7 +2,7 @@
 
 ## What
 
-A simple python Linter using pylama to provide mccabe, pep8, pyflakes and pep257 with Atom's [linting API](https://github.com/atom-community/linter).
+A simple python Linter using Pylama to provide Mccabe, pep8, Pyflakes and pep257 with Atom's [linting API](https://github.com/atom-community/linter).
 
 Adds an `E: # W: # I: #` (Error Warnings and Information) indicator to the status bar.
 
@@ -24,7 +24,7 @@ Ideally I should mod the community Linter package itself, but this felt like a b
 
  * Only lints on save.
  * No configuration options.
- * Requires Pylama to be in path, simply executes Pylama on the file in the file's directory.
+ * Requires Pylama to be in path, simply executes Pylama on the file in the file's directory; this means Pylama is run with default options.
  * Currently only classifies lint messages starting with `E` or `W` as errors and warnings, everything else is information.
 
 Bugs:
@@ -43,6 +43,6 @@ Done:
  * Learn CoffeeScript (enough anyways)
  * Write dummy package
  * Test lint message
- * Run pylama using BufferedProcess
- * Pass pylama messages to linter
+ * Run Pylama using BufferedProcess
+ * Pass Pylama messages to linter
  * Status bar E W I indicator

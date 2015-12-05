@@ -1,13 +1,25 @@
+# I've commented this to be newb friendly (ie me).
 {BufferedProcess} = require 'atom'
+{CompositeDisposable} = require 'atom'
 path = require 'path'
 
 # Name for debug.
 moduleName = 'python-lama-lint'
 status = {}
+subs = null
+lints = []
+currentEditorPath = null
 
 # Package API function.
 # Called when the package is being loaded, used to setup anything.
 activate = (state) ->
+  # The layout may be edited before it is consumed.
+  initStatusBarLayout()
+  # Get the path for the active pane and then sub the event for it changing.
+  activePane = atom.workspace.getActiveTextEditor()
+  if activePane then currentEditorPath = activePane.getPath()
+  subs = new CompositeDisposable
+  subs.add atom.workspace.onDidChangeActivePaneItem updateContext
   console.log 'activated: ' + moduleName # For debug.
 
 # Package API function.
@@ -15,10 +27,20 @@ activate = (state) ->
 deactivate = ->
   status.bar?.destroy()
   status.bar = null
+  subs.dispose()
   console.log 'deactivated: ' + moduleName # For debug.
 
+initStatusBarLayout = ->
+    status.ele = document.createElement('span')
+    status.errors = document.createElement('span')
+    status.warnings = document.createElement('span')
+    status.infos = document.createElement('span')
+    status.ele.appendChild status.errors
+    status.ele.appendChild status.warnings
+    status.ele.appendChild status.infos
+
 # Updates the status bar element
-updateStatus = (errors, warnings, infos) ->
+setStatus = (errors, warnings, infos) ->
   status.errors.textContent = 'E: ' + errors
   status.warnings.textContent = ' W: ' + warnings
   status.infos.textContent = ' I: ' + infos
@@ -27,6 +49,52 @@ updateStatus = (errors, warnings, infos) ->
   status.errors.className = if errors then 'text-error' else 'text-subtle'
   status.warnings.className = if warnings then 'text-warning' else 'text-subtle'
   status.infos.className = if infos then 'text-info' else 'text-subtle'
+
+# Clears all status text.
+clearStatus = ->
+  status.errors.textContent = ''
+  status.warnings.textContent = ''
+  status.infos.textContent = ''
+
+# Checks if editor has been linted and updates the status bar.
+update = ->
+  i = (lints.map (x) -> x.path).indexOf currentEditorPath
+  if i isnt -1
+    x = lints[i]
+    setStatus x.errors, x.warnings, x.infos
+  else
+    # Current editor is either not linted or not an editor.
+    clearStatus()
+
+# Trigger status bar update when the pane view changes.
+updateContext = (textEditor) ->
+  if typeof textEditor.getPath is 'function'
+    currentEditorPath = textEditor.getPath()
+  else
+    currentEditorPath = ''
+  update()
+
+# Add editor if it is new.
+addEditorPath = (filePath) ->
+  i = (lints.map (x) -> x.path).indexOf filePath
+  if i is -1
+    x =
+      path: filePath
+      errors: '?'
+      warnings: '?'
+      infos: '?'
+    lints.push x
+
+# Changes the internal tracking of EWI for each pane.
+# TextEditor may have been destroyed during linting so path must be used.
+changeEwi = (filePath, errors, warnings, infos) ->
+  # Path may have been removed if the editor was destory (not implemented).
+  i = (lints.map (x) -> x.path).indexOf filePath
+  if i isnt -1
+    x = lints[i]
+    x.errors = errors
+    x.warnings = warnings
+    x.infos = infos
 
 # Converts line of LamaLint output into Linter package message.
 processline = (line, filepath)->
@@ -83,7 +151,9 @@ lintFile = (filePath) ->
               when 'Error' then errors++
               when 'Warning' then warnings++
               when 'Info' then infos++
-        updateStatus(errors, warnings, infos)
+        # changeEwi and update are separate because the pane may have changed.
+        changeEwi(filePath, errors, warnings, infos)
+        update()
         resolve(results)
     )
   return new Promise (lintExecutor)
@@ -99,19 +169,12 @@ provideLinter = ->
     lintOnFly: false,
     lint: (textEditor) ->
       filePath = textEditor.getPath()
+      addEditorPath filePath
       console.log('Linting:' + filePath) # For debug.
       lintFile filePath
 
 # Status bar API function
 consumeStatusBar = (statusBar) ->
-  status.ele = document.createElement('span')
-  status.errors = document.createElement('span')
-  status.warnings = document.createElement('span')
-  status.infos = document.createElement('span')
-  status.ele.appendChild status.errors
-  status.ele.appendChild status.warnings
-  status.ele.appendChild status.infos
-  updateStatus '?', '?', '?'
   status.bar = statusBar.addLeftTile(item: status.ele, priority: 100)
 
 # Rant:

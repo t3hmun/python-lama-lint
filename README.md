@@ -27,15 +27,12 @@ Ideally I should mod the community Linter package itself, but this felt like a b
  * Requires Pylama to be in path, simply executes Pylama on the file in the file's directory; this means Pylama is run with default options.
  * Currently only classifies lint messages starting with `E` or `W` as errors and warnings, everything else is information.
 
-Bugs:
- * The status bar does not get updated when the tab changes.
-    * This isn't simple to fix since it would require the linting from each tab to be stored and restored, also cleaned up when the tab is quit.
+2015/12/05 Development paused. Looking at the plausibility of editing the Linter package, now that I understand CoffeeScript and Atom packages.
 
 Todo:
  * Properly differentiate between the types of lint messages that do not start with E or W.
  * Correctly label position of issues on the line (currently defaults to first character on the line).
  * Click to locate errors, warnings or infos.
- * Tab bug.
  * Indicate if the linting is stale (edits since last save).
  * Publish
 
@@ -46,3 +43,4 @@ Done:
  * Run Pylama using BufferedProcess
  * Pass Pylama messages to linter
  * Status bar E W I indicator
+ * Fixed tab bug so EWI only show on correct linted tabs.
